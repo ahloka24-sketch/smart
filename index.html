@@ -1,74 +1,530 @@
-const express = require("express");
+<!DOCTYPE html>
 
-const cors = require("cors");
+<html lang="ar" dir="rtl">
 
-const app = express();
+<head>
 
-// السماح بالاتصال من أي موقع (مثل GitHub Pages)
+  <meta charset="UTF-8" />
 
-app.use(cors({ origin: "*" }));
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-// قراءة JSON
+  <title>المعلم الذكي AI</title>
 
-app.use(express.json({ limit: "10mb" }));
+  <style>
 
-// صفحة اختبار للتأكد أن السيرفر يعمل
+    * {
 
-app.get("/", (req, res) => {
+      box-sizing: border-box;
 
-  res.json({
+      margin: 0;
 
-    status: "ok",
+      padding: 0;
 
-    message: "Smart Teacher API is running 🚀"
+    }
+
+    body {
+
+      font-family: Tahoma, Arial, sans-serif;
+
+      background: linear-gradient(135deg, #0f172a, #1e3a8a, #2563eb);
+
+      min-height: 100vh;
+
+      padding: 20px;
+
+      color: #111827;
+
+    }
+
+    .container {
+
+      max-width: 900px;
+
+      margin: 0 auto;
+
+    }
+
+    .card {
+
+      background: #ffffff;
+
+      border-radius: 28px;
+
+      overflow: hidden;
+
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+
+    }
+
+    .hero {
+
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+
+      color: #ffffff;
+
+      padding: 40px 30px;
+
+      text-align: center;
+
+    }
+
+    .hero h1 {
+
+      font-size: 34px;
+
+      margin-bottom: 12px;
+
+    }
+
+    .hero p {
+
+      font-size: 18px;
+
+      opacity: 0.95;
+
+      line-height: 1.8;
+
+    }
+
+    .content {
+
+      padding: 30px;
+
+    }
+
+    .grid {
+
+      display: grid;
+
+      gap: 18px;
+
+    }
+
+    .label {
+
+      display: block;
+
+      font-weight: bold;
+
+      margin-bottom: 8px;
+
+      color: #1f2937;
+
+    }
+
+    textarea,
+
+    input[type="file"] {
+
+      width: 100%;
+
+      border: 1px solid #d1d5db;
+
+      border-radius: 14px;
+
+      padding: 14px;
+
+      font-size: 16px;
+
+      background: #f9fafb;
+
+    }
+
+    textarea {
+
+      min-height: 120px;
+
+      resize: vertical;
+
+      line-height: 1.8;
+
+    }
+
+    .preview-box {
+
+      display: none;
+
+      margin-top: 8px;
+
+    }
+
+    .preview-box img {
+
+      width: 100%;
+
+      max-height: 420px;
+
+      object-fit: contain;
+
+      border-radius: 18px;
+
+      border: 1px solid #e5e7eb;
+
+      background: #f9fafb;
+
+    }
+
+    .actions {
+
+      display: flex;
+
+      gap: 12px;
+
+      flex-wrap: wrap;
+
+    }
+
+    button {
+
+      flex: 1;
+
+      min-width: 180px;
+
+      border: none;
+
+      border-radius: 14px;
+
+      padding: 16px;
+
+      font-size: 18px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+      transition: 0.25s;
+
+    }
+
+    .solve-btn {
+
+      background: linear-gradient(135deg, #10b981, #059669);
+
+      color: white;
+
+    }
+
+    .solve-btn:hover {
+
+      transform: translateY(-2px);
+
+      box-shadow: 0 12px 25px rgba(16, 185, 129, 0.35);
+
+    }
+
+    .clear-btn {
+
+      background: #e5e7eb;
+
+      color: #111827;
+
+    }
+
+    .clear-btn:hover {
+
+      background: #d1d5db;
+
+    }
+
+    .status {
+
+      display: none;
+
+      padding: 14px 18px;
+
+      border-radius: 12px;
+
+      font-weight: bold;
+
+      line-height: 1.8;
+
+    }
+
+    .status.loading {
+
+      display: block;
+
+      background: #eff6ff;
+
+      color: #1d4ed8;
+
+      border: 1px solid #bfdbfe;
+
+    }
+
+    .status.error {
+
+      display: block;
+
+      background: #fef2f2;
+
+      color: #dc2626;
+
+      border: 1px solid #fecaca;
+
+    }
+
+    .result {
+
+      display: none;
+
+      margin-top: 10px;
+
+      background: #f8fafc;
+
+      border: 1px solid #e5e7eb;
+
+      border-radius: 18px;
+
+      padding: 22px;
+
+      white-space: pre-wrap;
+
+      line-height: 2;
+
+      color: #111827;
+
+      text-align: right;
+
+    }
+
+    .result.show {
+
+      display: block;
+
+    }
+
+    .footer-note {
+
+      margin-top: 16px;
+
+      font-size: 14px;
+
+      color: #6b7280;
+
+      text-align: center;
+
+      line-height: 1.8;
+
+    }
+
+    @media (max-width: 768px) {
+
+      .hero h1 {
+
+        font-size: 28px;
+
+      }
+
+      .hero p {
+
+        font-size: 16px;
+
+      }
+
+      .content {
+
+        padding: 20px;
+
+      }
+
+      button {
+
+        width: 100%;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="card">
+
+    <div class="hero">
+
+      <h1>🧠 المعلم الذكي AI</h1>
+
+      <p>
+
+        ارفع صورة الواجب أو التقطها بالكاميرا، ثم اكتب سؤالك بالتفصيل،
+
+        وسيقوم المعلم الذكي بشرح الإجابة خطوة بخطوة بطريقة بسيطة وواضحة.
+
+      </p>
+
+    </div>
+
+    <div class="content">
+
+      <div class="grid">
+
+        <div>
+
+          <label class="label">📷 اختر صورة السؤال (اختياري)</label>
+
+          <input
+
+            type="file"
+
+            id="imageInput"
+
+            accept="image/*"
+
+            capture="environment"
+
+          />
+
+        </div>
+
+        <div class="preview-box" id="previewBox">
+
+          <img id="preview" alt="معاينة الصورة" />
+
+        </div>
+
+        <div>
+
+          <label class="label">✍️ اكتب سؤالك أو المطلوب</label>
+
+          <textarea
+
+            id="question"
+
+            placeholder="مثال: اشرح درس البناء الضوئي بطريقة سهلة، أو حل السؤال الموجود في الصورة."
+
+          ></textarea>
+
+        </div>
+
+        <div class="actions">
+
+          <button class="solve-btn" onclick="askAI()">
+
+            🚀 حل السؤال الآن
+
+          </button>
+
+          <button class="clear-btn" onclick="clearAll()">
+
+            🗑️ مسح
+
+          </button>
+
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div id="result" class="result"></div>
+
+        <div class="footer-note">
+
+          💡 يمكنك استخدام الموقع لشرح الدروس، حل الواجبات، والإجابة عن الأسئلة الدراسية.
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+  // ضع هنا رابط السيرفر الخاص بك على Render
+
+  const API_URL = "https://smart-bg8j.onrender.com/chat";
+
+  const imageInput = document.getElementById("imageInput");
+
+  const preview = document.getElementById("preview");
+
+  const previewBox = document.getElementById("previewBox");
+
+  const question = document.getElementById("question");
+
+  const statusBox = document.getElementById("status");
+
+  const resultBox = document.getElementById("result");
+
+  // معاينة الصورة
+
+  imageInput.addEventListener("change", () => {
+
+    const file = imageInput.files[0];
+
+    if (!file) {
+
+      previewBox.style.display = "none";
+
+      return;
+
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+
+      preview.src = reader.result;
+
+      previewBox.style.display = "block";
+
+    };
+
+    reader.readAsDataURL(file);
 
   });
 
-});
+  // عرض حالة
 
-// نقطة الدردشة
+  function showStatus(message, type = "loading") {
 
-app.post("/chat", async (req, res) => {
+    statusBox.className = "status " + type;
 
-  try {
+    statusBox.textContent = message;
 
-    const message = req.body.message;
+  }
 
-    // التأكد من وجود الرسالة
+  // إخفاء الحالة
 
-    if (!message) {
+  function hideStatus() {
 
-      return res.status(400).json({
+    statusBox.className = "status";
 
-        error: "No message provided"
+    statusBox.textContent = "";
 
-      });
+  }
 
-    }
+  // طلب الإجابة
 
-    // قراءة مفتاح Gemini من Environment Variables في Render
+  async function askAI() {
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const text = question.value.trim();
 
-    // التأكد من وجود المفتاح
+    if (!text) {
 
-    if (!apiKey) {
+      showStatus("❌ من فضلك اكتب سؤالك أولاً.", "error");
 
-      return res.status(500).json({
-
-        error: "GEMINI_API_KEY is missing in Render environment variables"
-
-      });
+      return;
 
     }
 
-    // إرسال الطلب إلى Gemini
+    resultBox.classList.remove("show");
 
-    const response = await fetch(
+    resultBox.textContent = "";
 
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    showStatus("⏳ جاري التفكير وتحضير الإجابة...");
 
-      {
+    try {
+
+      const response = await fetch(API_URL, {
 
         method: "POST",
 
@@ -80,76 +536,58 @@ app.post("/chat", async (req, res) => {
 
         body: JSON.stringify({
 
-          contents: [
-
-            {
-
-              parts: [
-
-                {
-
-                  text:
-
-                    "You are a smart teacher AI. " +
-
-                    "Explain clearly and simply for students.\n\n" +
-
-                    message
-
-                }
-
-              ]
-
-            }
-
-          ]
+          message: text
 
         })
 
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+
+        throw new Error(data.error || "حدث خطأ غير معروف.");
+
       }
 
-    );
+      hideStatus();
 
-    // قراءة الرد من Gemini
+      resultBox.textContent =
 
-    const data = await response.json();
+        data.answer || "لم يتم الحصول على إجابة.";
 
-    // استخراج الإجابة أو رسالة الخطأ
+      resultBox.classList.add("show");
 
-    const answer =
+    } catch (error) {
 
-      data?.candidates?.[0]?.content?.parts
+      showStatus("❌ " + error.message, "error");
 
-        ?.map(part => part.text || "")
-
-        .join("\n") ||
-
-      data?.error?.message ||
-
-      "No answer found.";
-
-    // إرسال النتيجة للواجهة الأمامية
-
-    res.json({ answer });
-
-  } catch (err) {
-
-    res.status(500).json({
-
-      error: err.message
-
-    });
+    }
 
   }
 
-});
+  // مسح جميع البيانات
 
-// تشغيل السيرفر
+  function clearAll() {
 
-const PORT = process.env.PORT || 3000;
+    imageInput.value = "";
 
-app.listen(PORT, () => {
+    question.value = "";
 
-  console.log("Smart Teacher API running on port", PORT);
+    preview.src = "";
 
-});
+    previewBox.style.display = "none";
+
+    hideStatus();
+
+    resultBox.classList.remove("show");
+
+    resultBox.textContent = "";
+
+  }
+
+</script>
+
+</body>
+
+</html>
