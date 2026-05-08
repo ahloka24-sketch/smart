@@ -4,13 +4,15 @@ const cors = require("cors");
 
 const app = express();
 
-// Middleware
+// السماح بالاتصال من أي موقع (مثل GitHub Pages)
 
 app.use(cors({ origin: "*" }));
 
+// قراءة JSON
+
 app.use(express.json({ limit: "10mb" }));
 
-// Health check (عشان ما يظهرش Cannot GET /)
+// صفحة اختبار للتأكد أن السيرفر يعمل
 
 app.get("/", (req, res) => {
 
@@ -18,13 +20,13 @@ app.get("/", (req, res) => {
 
     status: "ok",
 
-    message: "Chat API is running 🚀"
+    message: "Smart Teacher API is running 🚀"
 
   });
 
 });
 
-// Chat endpoint
+// نقطة الدردشة
 
 app.post("/chat", async (req, res) => {
 
@@ -32,27 +34,39 @@ app.post("/chat", async (req, res) => {
 
     const message = req.body.message;
 
+    // التأكد من وجود الرسالة
+
     if (!message) {
 
-      return res.status(400).json({ error: "No message provided" });
+      return res.status(400).json({
 
-    }
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    if (!apiKey) {
-
-      return res.status(500).json({
-
-        error: "API key missing in environment variables"
+        error: "No message provided"
 
       });
 
     }
 
+    // قراءة مفتاح Gemini من Environment Variables في Render
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    // التأكد من وجود المفتاح
+
+    if (!apiKey) {
+
+      return res.status(500).json({
+
+        error: "GEMINI_API_KEY is missing in Render environment variables"
+
+      });
+
+    }
+
+    // إرسال الطلب إلى Gemini
+
     const response = await fetch(
 
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
 
       {
 
@@ -74,7 +88,13 @@ app.post("/chat", async (req, res) => {
 
                 {
 
-                  text: `You are a smart teacher AI. Explain simply and clearly:\n\n${message}`
+                  text:
+
+                    "You are a smart teacher AI. " +
+
+                    "Explain clearly and simply for students.\n\n" +
+
+                    message
 
                 }
 
@@ -90,13 +110,17 @@ app.post("/chat", async (req, res) => {
 
     );
 
+    // قراءة الرد من Gemini
+
     const data = await response.json();
+
+    // استخراج الإجابة أو رسالة الخطأ
 
     const answer =
 
       data?.candidates?.[0]?.content?.parts
 
-        ?.map(p => p.text || "")
+        ?.map(part => part.text || "")
 
         .join("\n") ||
 
@@ -104,22 +128,28 @@ app.post("/chat", async (req, res) => {
 
       "No answer found.";
 
+    // إرسال النتيجة للواجهة الأمامية
+
     res.json({ answer });
 
   } catch (err) {
 
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+
+      error: err.message
+
+    });
 
   }
 
 });
 
-// Start server
+// تشغيل السيرفر
 
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
 
-  console.log("Chat server running on port", PORT);
+  console.log("Smart Teacher API running on port", PORT);
 
 });
