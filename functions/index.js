@@ -4,15 +4,13 @@ const cors = require("cors");
 
 const app = express();
 
-// السماح بالاتصال من أي موقع (مثل GitHub Pages)
+// Middleware
 
 app.use(cors({ origin: "*" }));
 
-// قراءة JSON
+app.use(express.json({ limit: "20mb" }));
 
-app.use(express.json({ limit: "10mb" }));
-
-// صفحة اختبار للتأكد أن السيرفر يعمل
+// الصفحة الرئيسية للتأكد أن السيرفر يعمل
 
 app.get("/", (req, res) => {
 
@@ -20,13 +18,85 @@ app.get("/", (req, res) => {
 
     status: "ok",
 
-    message: "Smart Teacher API is running 🚀"
+    message: "Smart Teacher AI API is running 🚀",
+
+    endpoints: {
+
+      health: "/health",
+
+      chat: "/chat",
+
+      solveHomework: "/solveHomework"
+
+    }
 
   });
 
 });
 
-// نقطة الدردشة
+// فحص صحة السيرفر والمفتاح
+
+app.get("/health", async (req, res) => {
+
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+
+    return res.status(500).json({
+
+      status: "error",
+
+      message: "GEMINI_API_KEY is missing"
+
+    });
+
+  }
+
+  try {
+
+    const testResponse = await fetch(
+
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+
+    );
+
+    const testData = await testResponse.json();
+
+    if (testData.error) {
+
+      return res.status(500).json({
+
+        status: "error",
+
+        message: testData.error.message
+
+      });
+
+    }
+
+    res.json({
+
+      status: "ok",
+
+      message: "API key is valid ✅"
+
+    });
+
+  } catch (err) {
+
+    res.status(500).json({
+
+      status: "error",
+
+      message: err.message
+
+    });
+
+  }
+
+});
+
+// دردشة نصية
 
 app.post("/chat", async (req, res) => {
 
@@ -34,7 +104,17 @@ app.post("/chat", async (req, res) => {
 
     const message = req.body.message;
 
-    // التأكد من وجود الرسالة
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+
+      return res.status(500).json({
+
+        error: "GEMINI_API_KEY is missing"
+
+      });
+
+    }
 
     if (!message) {
 
@@ -45,24 +125,6 @@ app.post("/chat", async (req, res) => {
       });
 
     }
-
-    // قراءة مفتاح Gemini من Environment Variables في Render
-
-    const apiKey = process.env.GEMINI_API_KEY;
-
-    // التأكد من وجود المفتاح
-
-    if (!apiKey) {
-
-      return res.status(500).json({
-
-        error: "GEMINI_API_KEY is missing in Render environment variables"
-
-      });
-
-    }
-
-    // إرسال الطلب إلى Gemini
 
     const response = await fetch(
 
@@ -90,9 +152,7 @@ app.post("/chat", async (req, res) => {
 
                   text:
 
-                    "You are a smart teacher AI. " +
-
-                    "Explain clearly and simply for students.\n\n" +
+                    "You are Smart Teacher AI. Explain clearly and simply for students.\n\n" +
 
                     message
 
@@ -110,25 +170,149 @@ app.post("/chat", async (req, res) => {
 
     );
 
-    // قراءة الرد من Gemini
-
     const data = await response.json();
 
-    // استخراج الإجابة أو رسالة الخطأ
+    if (data.error) {
+
+      return res.status(500).json({
+
+        error: data.error.message
+
+      });
+
+    }
 
     const answer =
 
       data?.candidates?.[0]?.content?.parts
 
-        ?.map(part => part.text || "")
+        ?.map((p) => p.text || "")
 
-        .join("\n") ||
+        .join("\n") || "No answer found.";
 
-      data?.error?.message ||
+    res.json({ answer });
 
-      "No answer found.";
+  } catch (err) {
 
-    // إرسال النتيجة للواجهة الأمامية
+    res.status(500).json({
+
+      error: err.message
+
+    });
+
+  }
+
+});
+
+// حل الواجب باستخدام صورة + سؤال
+
+app.post("/solveHomework", async (req, res) => {
+
+  try {
+
+    const { image, question } = req.body;
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+
+      return res.status(500).json({
+
+        error: "GEMINI_API_KEY is missing"
+
+      });
+
+    }
+
+    if (!image) {
+
+      return res.status(400).json({
+
+        error: "No image provided"
+
+      });
+
+    }
+
+    const prompt =
+
+      question && question.trim()
+
+        ? `You are a professional teacher. Solve the homework shown in the image and answer this request clearly for the student:\n\n${question}`
+
+        : "You are a professional teacher. Solve the homework shown in the image clearly and simply for the student.";
+
+    const response = await fetch(
+
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+
+      {
+
+        method: "POST",
+
+        headers: {
+
+          "Content-Type": "application/json"
+
+        },
+
+        body: JSON.stringify({
+
+          contents: [
+
+            {
+
+              parts: [
+
+                {
+
+                  text: prompt
+
+                },
+
+                {
+
+                  inline_data: {
+
+                    mime_type: "image/jpeg",
+
+                    data: image
+
+                  }
+
+                }
+
+              ]
+
+            }
+
+          ]
+
+        })
+
+      }
+
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+
+      return res.status(500).json({
+
+        error: data.error.message
+
+      });
+
+    }
+
+    const answer =
+
+      data?.candidates?.[0]?.content?.parts
+
+        ?.map((p) => p.text || "")
+
+        .join("\n") || "No answer found.";
 
     res.json({ answer });
 
@@ -150,6 +334,6 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
 
-  console.log("Smart Teacher API running on port", PORT);
+  console.log(`Smart Teacher AI running on port ${PORT}`);
 
-});
+})
