@@ -6,9 +6,9 @@
 
   <meta charset="UTF-8" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Homework AI</title>
+  <title>Smart Teacher AI</title>
 
   <style>
 
@@ -16,7 +16,7 @@
 
       font-family: Arial, sans-serif;
 
-      background: #f5f7fb;
+      background: linear-gradient(135deg, #eef2f7, #ffffff);
 
       margin: 0;
 
@@ -28,13 +28,13 @@
 
     .box {
 
-      max-width: 500px;
+      max-width: 520px;
 
       margin: auto;
 
-      background: #fff;
+      background: white;
 
-      padding: 20px;
+      padding: 25px;
 
       border-radius: 20px;
 
@@ -42,9 +42,19 @@
 
     }
 
-    h1 { color: #222; }
+    h1 {
 
-    input, button {
+      color: #1e1e1e;
+
+    }
+
+    p {
+
+      color: #666;
+
+    }
+
+    input, textarea, button {
 
       width: 100%;
 
@@ -58,6 +68,16 @@
 
       font-size: 16px;
 
+      box-sizing: border-box;
+
+    }
+
+    textarea {
+
+      resize: none;
+
+      height: 90px;
+
     }
 
     button {
@@ -69,6 +89,14 @@
       border: none;
 
       cursor: pointer;
+
+      font-weight: bold;
+
+    }
+
+    button:hover {
+
+      background: #333;
 
     }
 
@@ -90,13 +118,15 @@
 
       text-align: left;
 
-      background: #f9f9f9;
+      background: #f7f7f7;
 
       padding: 15px;
 
       border-radius: 12px;
 
       white-space: pre-wrap;
+
+      min-height: 50px;
 
     }
 
@@ -106,81 +136,95 @@
 
 <body>
 
-  <div class="box">
+<div class="box">
 
-    <h1>Homework AI</h1>
+  <h1>🧠 Smart Teacher AI</h1>
 
-    <p>Upload homework image and get the answer instantly</p>
+  <p>Upload or take a photo + write your question</p>
 
-    <input type="file" id="imageInput" accept="image/*" />
+  <input type="file" id="imageInput" accept="image/*" />
 
-    <img id="preview" />
+  <textarea id="question" placeholder="Write what you want the AI to solve..."></textarea>
 
-    <button onclick="solveHomework()">Solve Homework</button>
+  <img id="preview" />
 
-    <div id="result"></div>
+  <button onclick="solveHomework()">Solve Now 🚀</button>
 
-  </div>
+  <div id="result"></div>
 
-  <script>
+</div>
 
-    async function solveHomework() {
+<script>
 
-      const file = document.getElementById("imageInput").files[0];
+async function solveHomework() {
 
-      const result = document.getElementById("result");
+  const file = document.getElementById("imageInput").files[0];
 
-      const preview = document.getElementById("preview");
+  const question = document.getElementById("question").value;
 
-      if (!file) {
+  const result = document.getElementById("result");
 
-        result.innerText = "Please upload an image first.";
+  const preview = document.getElementById("preview");
 
-        return;
+  if (!file) {
 
-      }
+    result.innerText = "❌ Please upload an image first.";
 
-      const reader = new FileReader();
+    return;
 
-      reader.onload = async function () {
+  }
 
-        const base64 = reader.result.split(",")[1];
+  const reader = new FileReader();
 
-        preview.src = reader.result;
+  reader.onload = async function () {
 
-        preview.style.display = "block";
+    const base64 = reader.result.split(",")[1];
 
-        result.innerText = "Solving...";
+    preview.src = reader.result;
 
-        try {
+    preview.style.display = "block";
 
-          const res = await fetch("https://smart-bg8j.onrender.com/", {
+    result.innerText = "⏳ Solving like a smart teacher...";
 
-            method: "POST",
+    try {
 
-            headers: { "Content-Type": "application/json" },
+      const res = await fetch("https://smart-bg8j.onrender.com/solveHomework", {
 
-            body: JSON.stringify({ image: base64 })
+        method: "POST",
 
-          });
+        headers: {
 
-          const data = await res.json();
+          "Content-Type": "application/json"
 
-          result.innerText = data.answer || "No answer returned.";
+        },
 
-        } catch (err) {
+        body: JSON.stringify({
 
-          result.innerText = "Error: " + err.message;
+          image: base64,
 
-        }
+          question: question
 
-      };
+        })
 
-      reader.readAsDataURL(file);
+      });
+
+      const data = await res.json();
+
+      result.innerText = data.answer || "No answer returned.";
+
+    } catch (err) {
+
+      result.innerText = "Error: " + err.message;
 
     }
 
-  </script>
+  };
+
+  reader.readAsDataURL(file);
+
+}
+
+</script>
 
 </body>
 
