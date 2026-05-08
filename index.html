@@ -4,117 +4,119 @@
 
 <head>
 
-  <meta charset="UTF-8" />
+<meta charset="UTF-8" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Smart Teacher AI</title>
+<title>Smart Teacher Chat AI</title>
 
-  <style>
+<style>
 
-    body {
+body {
 
-      font-family: Arial;
+  font-family: Arial;
 
-      background: #f4f6fb;
+  background: #f4f6fb;
 
-      text-align: center;
+  margin: 0;
 
-      padding: 20px;
+  padding: 20px;
 
-    }
+  text-align: center;
 
-    .box {
+}
 
-      max-width: 520px;
+.box {
 
-      margin: auto;
+  max-width: 600px;
 
-      background: #fff;
+  margin: auto;
 
-      padding: 20px;
+  background: white;
 
-      border-radius: 18px;
+  padding: 20px;
 
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-radius: 15px;
 
-    }
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
 
-    h1 { margin-bottom: 5px; }
+}
 
-    input, textarea, button {
+#chat {
 
-      width: 100%;
+  height: 400px;
 
-      margin-top: 12px;
+  overflow-y: auto;
 
-      padding: 12px;
+  border: 1px solid #eee;
 
-      border-radius: 10px;
+  padding: 10px;
 
-      border: 1px solid #ddd;
+  border-radius: 10px;
 
-      font-size: 16px;
+  text-align: left;
 
-    }
+  background: #fafafa;
 
-    textarea {
+}
 
-      height: 80px;
+.msg {
 
-      resize: none;
+  margin: 10px 0;
 
-    }
+}
 
-    button {
+.user {
 
-      background: black;
+  color: blue;
 
-      color: white;
+  font-weight: bold;
 
-      cursor: pointer;
+}
 
-      border: none;
+.ai {
 
-    }
+  color: green;
 
-    button:hover {
+  font-weight: bold;
 
-      background: #333;
+}
 
-    }
+input {
 
-    img {
+  width: 100%;
 
-      width: 100%;
+  padding: 12px;
 
-      margin-top: 10px;
+  margin-top: 10px;
 
-      border-radius: 10px;
+  border-radius: 10px;
 
-      display: none;
+  border: 1px solid #ddd;
 
-    }
+}
 
-    #result {
+button {
 
-      margin-top: 15px;
+  width: 100%;
 
-      text-align: left;
+  padding: 12px;
 
-      background: #f7f7f7;
+  margin-top: 10px;
 
-      padding: 12px;
+  background: black;
 
-      border-radius: 10px;
+  color: white;
 
-      min-height: 50px;
+  border: none;
 
-      white-space: pre-wrap;
+  border-radius: 10px;
 
-    }
+  cursor: pointer;
 
-  </style>
+}
+
+</style>
 
 </head>
 
@@ -122,77 +124,51 @@
 
 <div class="box">
 
-  <h1>🧠 Smart Teacher AI</h1>
+  <h2>🧠 Smart Teacher Chat AI</h2>
 
-  <p>Upload image and get answer</p>
+  <div id="chat"></div>
 
-  <input type="file" id="file" accept="image/*"/>
+  <input id="input" placeholder="Ask anything..." />
 
-  <textarea id="question" placeholder="Write your question (optional)"></textarea>
-
-  <img id="preview"/>
-
-  <button onclick="send()">Solve Homework 🚀</button>
-
-  <div id="result"></div>
+  <button onclick="send()">Send</button>
 
 </div>
 
 <script>
 
-function toBase64(file) {
+const chat = document.getElementById("chat");
 
-  return new Promise((resolve, reject) => {
+function addMsg(text, type) {
 
-    const reader = new FileReader();
+  const div = document.createElement("div");
 
-    reader.onload = () => {
+  div.className = "msg " + type;
 
-      // ✅ important fix: remove prefix
+  div.innerText = (type === "user" ? "You: " : "AI: ") + text;
 
-      const base64 = reader.result.split(",")[1];
+  chat.appendChild(div);
 
-      resolve(base64);
-
-    };
-
-    reader.onerror = reject;
-
-    reader.readAsDataURL(file);
-
-  });
+  chat.scrollTop = chat.scrollHeight;
 
 }
 
 async function send() {
 
-  const file = document.getElementById("file").files[0];
+  const input = document.getElementById("input");
 
-  const result = document.getElementById("result");
+  const text = input.value;
 
-  const preview = document.getElementById("preview");
+  if (!text) return;
 
-  const question = document.getElementById("question").value;
+  addMsg(text, "user");
 
-  if (!file) {
+  input.value = "";
 
-    result.innerText = "❌ Please upload an image first";
-
-    return;
-
-  }
-
-  result.innerText = "⏳ Thinking like a teacher...";
+  addMsg("Thinking...", "ai");
 
   try {
 
-    const base64 = await toBase64(file);
-
-    preview.src = URL.createObjectURL(file);
-
-    preview.style.display = "block";
-
-    const res = await fetch("https://smart-bg8j.onrender.com/solveHomework", {
+    const res = await fetch("https://smart-bg8j.onrender.com/chat", {
 
       method: "POST",
 
@@ -202,31 +178,21 @@ async function send() {
 
       },
 
-      body: JSON.stringify({
-
-        image: base64,
-
-        question: question
-
-      })
+      body: JSON.stringify({ message: text })
 
     });
 
-    if (!res.ok) {
-
-      const errText = await res.text();
-
-      throw new Error(errText);
-
-    }
-
     const data = await res.json();
 
-    result.innerText = data.answer || "No answer returned.";
+    chat.lastChild.remove();
+
+    addMsg(data.answer || "No answer", "ai");
 
   } catch (err) {
 
-    result.innerText = "❌ Error: " + err.message;
+    chat.lastChild.remove();
+
+    addMsg("Error: " + err.message, "ai");
 
   }
 
