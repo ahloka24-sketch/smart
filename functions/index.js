@@ -1,79 +1,85 @@
-const functions = require("firebase-functions");
+const express = require("express");
 
-const cors = require("cors")({ origin: true });
+const cors = require("cors");
 
-exports.solveHomework = functions.https.onRequest(async (req, res) => {
+const app = express();
 
-  cors(req, res, async () => {
+app.use(cors());
 
-    try {
+app.use(express.json({ limit: "10mb" }));
 
-      const image = req.body.image;
+app.post("/solveHomework", async (req, res) => {
 
-      const apiKey = process.env.GEMINI_API_KEY;
+  try {
 
-      const response = await fetch(
+    const image = req.body.image;
 
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    const apiKey = process.env.GEMINI_API_KEY;
 
-        {
+    const response = await fetch(
 
-          method: "POST",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
 
-          headers: { "Content-Type": "application/json" },
+      {
 
-          body: JSON.stringify({
+        method: "POST",
 
-            contents: [
+        headers: { "Content-Type": "application/json" },
 
-              {
+        body: JSON.stringify({
 
-                parts: [
+          contents: [
 
-                  {
+            {
 
-                    text: "Solve this homework image clearly for a student. Give direct final answers and simple explanation."
+              parts: [
 
-                  },
+                {
 
-                  {
+                  text: "Solve this homework image clearly for a student. Give direct answers."
 
-                    inline_data: {
+                },
 
-                      mime_type: "image/jpeg",
+                {
 
-                      data: image
+                  inline_data: {
 
-                    }
+                    mime_type: "image/jpeg",
+
+                    data: image
 
                   }
 
-                ]
+                }
 
-              }
+              ]
 
-            ]
+            }
 
-          })
+          ]
 
-        }
+        })
 
-      );
+      }
 
-      const data = await response.json();
+    );
 
-      const answer =
+    const data = await response.json();
 
-        data.candidates?.[0]?.content?.parts?.[0]?.text || "No answer found.";
+    const answer =
 
-      res.json({ answer });
+      data.candidates?.[0]?.content?.parts?.[0]?.text || "No answer found.";
 
-    } catch (error) {
+    res.json({ answer });
 
-      res.status(500).json({ error: error.message });
+  } catch (err) {
 
-    }
+    res.status(500).json({ error: err.message });
 
-  });
+  }
 
 });
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => console.log("Server running on", PORT));
