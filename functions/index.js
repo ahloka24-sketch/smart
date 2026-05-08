@@ -4,9 +4,27 @@ const cors = require("cors");
 
 const app = express();
 
+// Middleware
+
 app.use(cors({ origin: "*" }));
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+
+// Health check (عشان ما يظهرش Cannot GET /)
+
+app.get("/", (req, res) => {
+
+  res.json({
+
+    status: "ok",
+
+    message: "Chat API is running 🚀"
+
+  });
+
+});
+
+// Chat endpoint
 
 app.post("/chat", async (req, res) => {
 
@@ -14,11 +32,21 @@ app.post("/chat", async (req, res) => {
 
     const message = req.body.message;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-
     if (!message) {
 
       return res.status(400).json({ error: "No message provided" });
+
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+
+      return res.status(500).json({
+
+        error: "API key missing in environment variables"
+
+      });
 
     }
 
@@ -30,7 +58,11 @@ app.post("/chat", async (req, res) => {
 
         method: "POST",
 
-        headers: { "Content-Type": "application/json" },
+        headers: {
+
+          "Content-Type": "application/json"
+
+        },
 
         body: JSON.stringify({
 
@@ -42,7 +74,7 @@ app.post("/chat", async (req, res) => {
 
                 {
 
-                  text: `You are a smart teacher. Answer clearly and simply:\n\n${message}`
+                  text: `You are a smart teacher AI. Explain simply and clearly:\n\n${message}`
 
                 }
 
@@ -82,10 +114,12 @@ app.post("/chat", async (req, res) => {
 
 });
 
+// Start server
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
 
-  console.log("Chat server running on", PORT);
+  console.log("Chat server running on port", PORT);
 
 });
