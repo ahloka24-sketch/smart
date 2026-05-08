@@ -8,11 +8,33 @@ app.use(cors());
 
 app.use(express.json({ limit: "10mb" }));
 
+// ✅ Home route (يحميك من Cannot GET /)
+
+app.get("/", (req, res) => {
+
+  res.json({
+
+    status: "ok",
+
+    message: "API is running 🚀"
+
+  });
+
+});
+
+// 🔥 Solve Homework API
+
 app.post("/solveHomework", async (req, res) => {
 
   try {
 
     const image = req.body.image;
+
+    if (!image) {
+
+      return res.status(400).json({ error: "Image is required" });
+
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -24,7 +46,11 @@ app.post("/solveHomework", async (req, res) => {
 
         method: "POST",
 
-        headers: { "Content-Type": "application/json" },
+        headers: {
+
+          "Content-Type": "application/json"
+
+        },
 
         body: JSON.stringify({
 
@@ -36,7 +62,7 @@ app.post("/solveHomework", async (req, res) => {
 
                 {
 
-                  text: "Solve this homework image clearly for a student. Give direct answers."
+                  text: "Solve this homework image clearly for a student. Give direct answers and simple explanation."
 
                 },
 
@@ -79,6 +105,8 @@ app.post("/solveHomework", async (req, res) => {
   }
 
 });
+
+// 🚀 Start server
 
 const PORT = process.env.PORT || 3000;
 
